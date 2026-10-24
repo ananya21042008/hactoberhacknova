@@ -109,8 +109,8 @@
 
       <!-- Login / Sign up toggle -->
       <div class="flex bg-zinc-950 border border-zinc-800 rounded-xl p-1 mb-7">
-        <button id="tabLogin" onclick="setMode('login')" class="tab-btn active flex-1 py-2.5 rounded-lg text-sm font-semibold">Login</button>
-        <button id="tabSignup" onclick="setMode('signup')" class="tab-btn flex-1 py-2.5 rounded-lg text-sm font-semibold">Sign up</button>
+        <button id="tabLogin" type="button" onclick="setMode('login')" class="tab-btn active flex-1 py-2.5 rounded-lg text-sm font-semibold">Login</button>
+        <button id="tabSignup" type="button" onclick="setMode('signup')" class="tab-btn flex-1 py-2.5 rounded-lg text-sm font-semibold">Sign up</button>
       </div>
 
       <!-- Header -->
@@ -156,14 +156,14 @@
           <p id="termsError" class="text-red-400 text-sm mt-2 hidden">Accept the terms to continue.</p>
         </div>
 
-        <button id="sendOtpBtn" onclick="sendOtp()"
+        <button id="sendOtpBtn" type="button" onclick="sendOtp()"
           class="btn-primary w-full mt-6 text-white font-semibold text-base rounded-xl py-3.5">
           Send OTP
         </button>
 
         <p class="text-center text-gray-500 text-sm mt-5">
           <span id="switchText">New to WorkKaro?</span>
-          <button id="switchBtn" onclick="toggleMode()" class="accent-text font-medium hover:underline ml-1">Create an account</button>
+          <button id="switchBtn" type="button" onclick="toggleMode()" class="accent-text font-medium hover:underline ml-1">Create an account</button>
         </p>
       </div>
 
@@ -181,22 +181,23 @@
         </div>
         <p id="otpError" class="text-red-400 text-sm mt-2 hidden">Enter all 4 digits.</p>
 
-        <button id="verifyBtn" onclick="verifyOtp()"
+        <button id="verifyBtn" type="button" onclick="verifyOtp()"
           class="btn-primary w-full mt-6 text-white font-semibold text-base rounded-xl py-3.5">
           Verify and login
         </button>
 
         <div class="flex items-center justify-between mt-5 text-sm">
-          <button onclick="changeNumber()" class="text-gray-400 hover:text-white transition-colors">Change number</button>
-          <button id="resendBtn" onclick="startTimer()" class="accent-text disabled:text-gray-600" disabled>Resend in 30s</button>
+          <button type="button" onclick="changeNumber()" class="text-gray-400 hover:text-white transition-colors">Change number</button>
+          <button id="resendBtn" type="button" onclick="startTimer()" class="accent-text disabled:text-gray-600" disabled>Resend in 30s</button>
         </div>
       </div>
 
     </div>
 
-    <!-- Back -->
+    <!-- Back to role selection -->
     <div class="fade-up d3 text-center mt-8">
-      <a href="index.html" class="text-gray-500 hover:text-gray-300 text-sm tracking-wide transition-colors">← Choose a different role</a>
+      <a id="backLink" href="index.html"
+         class="text-gray-500 hover:text-gray-300 text-sm tracking-wide transition-colors">← Choose a different role</a>
     </div>
   </div>
 
@@ -215,6 +216,17 @@
     const resendBtn = $('resendBtn');
     let mode = 'login';
     let timerId = null;
+
+    // ----- Back to role selection -----
+    // Clears the saved role first, then goes to index.html
+    $('backLink').addEventListener('click', e => {
+      e.preventDefault();
+      try { localStorage.removeItem('userRole'); } catch (err) {}
+      window.location.href = 'index.html';
+    });
+
+    // Restore the page if it is shown again from the browser's back/forward cache
+    window.addEventListener('pageshow', () => { document.body.style.opacity = '1'; });
 
     // ----- Login / Sign up switching -----
     function setMode(m) {
