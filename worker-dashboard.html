@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>WorkKaro | Worker Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="worker.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="#" data-view="home" aria-label="WorkKaro home">Work<span>Karo</span></a>
+    <div class="worker-mini">
+      <div class="avatar" id="sidebarAvatar">W</div>
+      <div><strong id="sidebarName">Worker</strong><span id="sidebarAvailability">Open to work is OFF</span></div>
+    </div>
+    <nav class="side-nav" aria-label="Main navigation">
+      <button class="nav-item active" data-view="home"><span>🏠</span> Dashboard</button>
+      <button class="nav-item" data-view="jobs"><span>💼</span> Nearby jobs</button>
+      <button class="nav-item" data-view="applications"><span>📋</span> My applications <b id="applicationNavCount">0</b></button>
+      <button class="nav-item" data-view="map"><span>📍</span> Map view</button>
+      <button class="nav-item" data-view="earnings"><span>💰</span> Earnings &amp; history</button>
+      <button class="nav-item" data-view="notifications"><span>🔔</span> Notifications <b id="notificationNavCount">0</b></button>
+      <button class="nav-item" data-view="profile"><span>👤</span> Worker profile</button>
+      <button class="nav-item" data-view="verification"><span>✅</span> Identity verification</button>
+    </nav>
+    <div class="sidebar-note"><span class="status-dot"></span> Your work, your choice.<br><small>Switch availability off whenever you need.</small>
+      <a class="switch-role" href="index.html">← Choose a different role</a></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="mobile-brand">Work<span>Karo</span></div>
+      <div class="crumb"><span>Worker space</span><span class="crumb-sep">/</span><strong id="pageCrumb">Dashboard</strong></div>
+      <div class="top-actions">
+        <button class="icon-button" id="headerNotifications" aria-label="Open notifications">🔔<span class="notification-dot hidden" id="headerNotificationDot"></span></button>
+        <button class="profile-chip" data-view="profile"><span class="avatar small" id="topAvatar">W</span><span id="topName">Worker</span><span>⌄</span></button>
+      </div>
+    </header>
+
+    <!-- HOME -->
+    <section class="view active" id="view-home">
+      <div class="welcome-row">
+        <div><p class="eyebrow" id="todayLabel">YOUR WORKSPACE</p><h1>Namaste, <span id="welcomeName">Worker</span> 👋</h1><p class="muted">Find work within 10 km of where you are right now.</p></div>
+        <div class="location-pill"><span class="loc-icon">📍</span><span id="locationLabel">Location off</span><button id="refreshLocation" class="hidden">Refresh</button></div>
+      </div>
+
+      <section class="availability-card">
+        <div class="availability-copy"><div class="availability-icon">✅</div><div><p class="eyebrow light-eyebrow">YOUR AVAILABILITY</p><h2 id="availabilityTitle">You're currently offline</h2><p id="availabilityDescription">Turn on Open to Work and allow location to see jobs within 10 km.</p></div></div>
+        <label class="switch" aria-label="Open to Work"><input type="checkbox" id="availabilityToggle"><span class="slider"></span></label>
+      </section>
+      <div id="locationAlert" class="alert hidden" role="alert"></div>
+
+      <div class="stats-grid">
+        <article class="stat-card"><div class="stat-icon orange">💼</div><span class="stat-label">Jobs within 10 km</span><strong id="statJobs">—</strong><small>Based on your device location</small></article>
+        <article class="stat-card"><div class="stat-icon blue">📋</div><span class="stat-label">My applications</span><strong id="statApplications">0</strong><small>Jobs you've applied for</small></article>
+        <article class="stat-card"><div class="stat-icon green">💰</div><span class="stat-label">Recorded earnings</span><strong id="statEarnings">₹0</strong><small>From completed work</small></article>
+      </div>
+
+      <div class="section-heading"><div><h2>Jobs near you</h2><p class="muted">Only jobs within 10 km of your current location.</p></div><button class="text-button" data-view="jobs">View all jobs →</button></div>
+      <div id="homeJobs" class="job-grid"></div>
+      <div class="home-bottom-grid">
+        <article class="panel">
+          <div class="section-heading compact"><div><h3>Application activity</h3><p class="muted">Track your latest applications.</p></div><button class="text-button" data-view="applications">View all</button></div>
+          <div id="homeApplications" class="activity-list"></div>
+        </article>
+        <article class="panel safety-panel"><div class="safety-symbol">🛡️</div><h3>Stay safe while finding work</h3><p class="muted">Check pay, hours and workplace details before applying. Never pay a fee to get a job.</p><button class="outline-button" data-view="verification">Review verification</button></article>
+      </div>
+    </section>
+
+    <!-- JOBS -->
+    <section class="view" id="view-jobs">
+      <div class="page-heading"><div><p class="eyebrow">OPPORTUNITIES</p><h1>Nearby jobs</h1><p class="muted">Daily-wage work within 10 km of your device location.</p></div><span class="pill" id="jobsCountPill">Hidden</span></div>
+      <div class="search-row"><label class="search-box"><span>🔍</span><input id="jobSearch" placeholder="Search job title, skill or shop" autocomplete="off"></label>
+        <select id="payFilter" aria-label="Minimum daily pay"><option value="0">Any daily pay</option><option value="500">₹500+ per day</option><option value="700">₹700+ per day</option><option value="900">₹900+ per day</option></select>
+        <select id="sortFilter" aria-label="Sort jobs"><option value="distance">Nearest first</option><option value="pay">Highest pay</option><option value="recent">Recently posted</option></select></div>
+      <div id="jobsGate" class="gate-card hidden"><div class="gate-icon">📍</div><h2>Turn on Open to Work to see jobs</h2><p class="muted">We'll ask for your device location and show jobs within 10 km. You can't pick a different area.</p><button class="primary-button" id="jobsGateButton">Turn on Open to Work</button></div>
+      <div id="jobsList" class="job-grid"></div>
+    </section>
+
+    <!-- APPLICATIONS -->
+    <section class="view" id="view-applications">
+      <div class="page-heading"><div><p class="eyebrow">YOUR PROGRESS</p><h1>My applications</h1><p class="muted">See the latest status of every job you applied for.</p></div></div>
+      <div class="filter-tabs" id="applicationTabs"><button class="selected" data-status="all">All</button><button data-status="Applied">Applied</button><button data-status="Under review">Under review</button><button data-status="Accepted">Accepted</button><button data-status="Rejected">Rejected</button></div>
+      <div id="applicationsList" class="stack-list"></div>
+    </section>
+
+    <!-- MAP -->
+    <section class="view" id="view-map">
+      <div class="page-heading"><div><p class="eyebrow">WORKPLACE LOCATIONS</p><h1>Map view</h1><p class="muted">Preview a workplace before applying, then navigate after acceptance.</p></div></div>
+      <div class="map-layout">
+        <div class="map-panel"><div id="map"></div><div id="mapNotice" class="map-notice">Turn on Open to Work to see jobs around you.</div></div>
+        <aside class="map-side panel"><div class="map-side-header"><div><h3 id="mapSideTitle">Choose a job</h3><p id="mapSideSubtitle" class="muted">Job locations will appear here.</p></div></div>
+          <div id="mapJobDetails" class="map-job-details"><div class="empty-icon">📍</div><p class="muted">Select a job from Nearby Jobs or Applications.</p></div>
+          <button id="mapPrimaryAction" class="primary-button full hidden">View job</button>
+          <button id="googleMapsButton" class="outline-button full hidden">Open Google Maps ↗</button>
+          <p class="fine-print">Your device location is used only while Open to Work is on. Route and ETA depend on available mapping services.</p></aside>
+      </div>
+    </section>
+
+    <!-- EARNINGS -->
+    <section class="view" id="view-earnings">
+      <div class="page-heading"><div><p class="eyebrow">YOUR WORK RECORD</p><h1>Earnings &amp; work history</h1><p class="muted">Keep track of completed work and payment status.</p></div></div>
+      <div class="earnings-hero"><div><span>Recorded earnings</span><strong id="earningsTotal">₹0</strong><small>Based on completed jobs in this demo</small></div><div class="earnings-hero-icon">💰</div></div>
+      <div class="section-heading"><div><h2>Work history</h2><p class="muted">Completed jobs and payment records.</p></div></div>
+      <div id="historyList" class="stack-list"></div>
+      <p class="fine-print">Sample records only. In production, earnings and payment statuses must come from verified job and payment records.</p>
+    </section>
+
+    <!-- NOTIFICATIONS -->
+    <section class="view" id="view-notifications">
+      <div class="page-heading"><div><p class="eyebrow">STAY UPDATED</p><h1>Notifications</h1><p class="muted">Job alerts and important application updates.</p></div><button class="outline-button" id="markAllRead">Mark all as read</button></div>
+      <div class="notification-preferences panel"><div><strong>Job alerts</strong><p class="muted">Alerts for new jobs within 10 km while Open to Work is on.</p></div><label class="switch small-switch"><input type="checkbox" id="jobAlertsToggle" checked><span class="slider"></span></label></div>
+      <div class="notification-preferences panel"><div><strong>Browser notifications</strong><p class="muted">Allow this browser to show notifications when supported.</p></div><button class="outline-button" id="browserPermissionButton">Enable browser alerts</button></div>
+      <div class="notification-preferences panel"><div><strong>SMS alerts</strong><p class="muted">SMS delivery needs a verified phone number and a connected SMS service.</p></div><span class="pill muted-pill">Backend required</span></div>
+      <div id="notificationsList" class="stack-list"></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="view" id="view-profile">
+      <div class="page-heading"><div><p class="eyebrow">YOUR INFORMATION</p><h1>Worker profile</h1><p class="muted">Help employers understand your skills and experience.</p></div><span class="pill" id="profileCompletion">Profile 0%</span></div>
+      <form id="profileForm" class="panel profile-form">
+        <div class="profile-form-header"><div class="avatar large" id="profileAvatar">W</div><div><h3>Basic information</h3><p class="muted">Only share information needed for work.</p></div></div>
+        <div class="form-grid">
+          <label>Full name<input id="profileName" required maxlength="70" placeholder="Your name"></label>
+          <label>Phone number<input id="profilePhone" inputmode="tel" maxlength="15" placeholder="Your contact number"></label>
+          <label>Skills<input id="profileSkills" maxlength="180" placeholder="e.g. shop helper, packing"></label>
+          <label>Preferred work<select id="profileWorkType"><option>Any suitable work</option><option>Shop helper</option><option>Packing</option><option>Delivery</option><option>Cleaning</option><option>Construction</option><option>Kitchen helper</option></select></label>
+          <div class="wide locked-field"><span class="lock-icon">📍</span><div><strong>Work location</strong><small>Set automatically from your device when Open to Work is on. Jobs are limited to a 10 km radius and the area can't be changed manually.</small></div></div>
+          <label class="wide">Experience<textarea id="profileExperience" rows="3" maxlength="500" placeholder="Briefly describe relevant work experience (optional)"></textarea></label>
+        </div>
+        <div class="form-footer"><span class="muted">Your profile is not a public document.</span><button class="primary-button" type="submit">Save profile</button></div>
+      </form>
+    </section>
+
+    <!-- VERIFICATION -->
+    <section class="view" id="view-verification">
+      <div class="page-heading"><div><p class="eyebrow">BUILD TRUST</p><h1>Identity verification</h1><p class="muted">Understand your verification status and next steps.</p></div></div>
+      <div class="verification-card panel"><div class="verification-art">✅</div><div><span class="pill amber-pill">Not started</span><h2>Verify your identity</h2><p class="muted">Verification can help build trust with employers. This demo does not collect or upload identity documents.</p><button class="primary-button" id="verificationInfoButton">View verification steps</button></div></div>
+      <div class="panel verification-steps"><h3>Verification checklist</h3>
+        <div class="check-row"><span class="check-circle">1</span><div><strong>Confirm your contact details</strong><p class="muted">Use a phone number you control.</p></div></div>
+        <div class="check-row"><span class="check-circle">2</span><div><strong>Review the privacy notice</strong><p class="muted">Understand how documents will be protected and used.</p></div></div>
+        <div class="check-row"><span class="check-circle">3</span><div><strong>Submit through a secure verification flow</strong><p class="muted">A production version needs secure backend storage and a defined review process.</p></div></div></div>
+    </section>
+
+    <footer class="footer"><span>© WorkKaro</span><span>Find work. Hire fast.</span></footer>
+  </main>
+</div>
+
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <button class="active" data-view="home"><span>🏠</span>Home</button><button data-view="jobs"><span>💼</span>Jobs</button><button data-view="applications"><span>📋</span>Applied</button><button data-view="map"><span>📍</span>Map</button><button data-view="profile"><span>👤</span>Profile</button>
+</nav>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<dialog id="jobDialog" class="job-dialog">
+  <form method="dialog"><button class="dialog-close" aria-label="Close">×</button></form>
+  <div id="jobDialogContent"></div>
+</dialog>
+<dialog id="verificationDialog" class="job-dialog small-dialog">
+  <form method="dialog"><button class="dialog-close" aria-label="Close">×</button><p class="eyebrow">IDENTITY VERIFICATION</p><h2>Verification is not connected yet</h2><p class="muted">This prototype intentionally does not request identity documents. A real flow must use a secure backend, access controls, a privacy notice and a defined review process.</p><button class="primary-button full">Got it</button></form>
+</dialog>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="worker.js"></script>
+</body>
+</html>
