@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorkKaro - Verify identity</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: radial-gradient(ellipse at top, #111111 0%, #000000 70%);
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    :root { --accent: #3b82f6; --accent-glow: rgba(59, 130, 246, 0.25); }
+
+    .fade-up { opacity: 0; transform: translateY(30px); animation: fadeUp 0.7s ease forwards; }
+    .d1 { animation-delay: 0.1s; }
+    .d2 { animation-delay: 0.25s; }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+    .card { transition: border-color 0.35s ease, box-shadow 0.35s ease; }
+    .card:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), 0 25px 50px -12px var(--accent-glow);
+    }
+
+    .field { transition: border-color 0.25s ease, box-shadow 0.25s ease; }
+    .field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+    .btn-primary { background: var(--accent); transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-3px) scale(1.02); box-shadow: 0 18px 35px -10px var(--accent-glow); }
+    .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Progress */
+    .dot { transition: all 0.3s ease; }
+    .dot.done { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .dot.current { border-color: var(--accent); color: #fff; box-shadow: 0 0 0 4px var(--accent-glow); }
+    .bar-fill { transition: width 0.4s ease; background: var(--accent); }
+
+    /* Upload boxes */
+    .upload { border: 2px dashed #3f3f46; transition: all 0.25s ease; cursor: pointer; }
+    .upload:hover { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+    .upload.has-file { border-style: solid; border-color: #22c55e; }
+
+    .otp-box { transition: border-color 0.25s ease, box-shadow 0.25s ease; }
+    .otp-box:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+    .shake { animation: shake 0.4s ease; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); }
+    }
+
+    .pop { animation: pop 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+    @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fade-up, .pop { animation: none; opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center px-4 py-10">
+
+  <!-- Logo -->
+  <div class="fade-up d1 mb-8 text-center">
+    <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight select-none">
+      <span class="text-white">Work</span><span class="text-orange-500">Karo</span>
+    </h1>
+    <p class="text-gray-400 mt-2 tracking-wide">Verify your identity to start working</p>
+  </div>
+
+  <div class="w-full max-w-md">
+
+    <!-- Progress -->
+    <div id="progress" class="fade-up d1 mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <div class="dot w-9 h-9 rounded-full border border-zinc-700 bg-zinc-900 text-gray-500 flex items-center justify-center text-sm font-semibold" data-dot="1">1</div>
+        <div class="dot w-9 h-9 rounded-full border border-zinc-700 bg-zinc-900 text-gray-500 flex items-center justify-center text-sm font-semibold" data-dot="2">2</div>
+        <div class="dot w-9 h-9 rounded-full border border-zinc-700 bg-zinc-900 text-gray-500 flex items-center justify-center text-sm font-semibold" data-dot="3">3</div>
+        <div class="dot w-9 h-9 rounded-full border border-zinc-700 bg-zinc-900 text-gray-500 flex items-center justify-center text-sm font-semibold" data-dot="4">4</div>
+      </div>
+      <div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+        <div id="barFill" class="bar-fill h-full rounded-full" style="width:25%"></div>
+      </div>
+      <p id="stepLabel" class="text-gray-500 text-sm mt-2">Step 1 of 4: Your photo</p>
+    </div>
+
+    <!-- Card -->
+    <div id="mainCard" class="card fade-up d2 bg-zinc-900/90 border border-zinc-700 rounded-2xl p-6 md:p-8">
+
+      <!-- STEP 1: Selfie -->
+      <div id="step1" class="step">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl"
+               style="background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(37,99,235,0.10));">🤳</div>
+          <div class="flex-1">
+            <h2 class="text-xl font-semibold text-white">Upload your photo</h2>
+            <p class="text-gray-400 text-sm mt-1">Employers will see this before you come</p>
+          </div>
+        </div>
+
+        <label id="boxSelfie" class="upload block rounded-xl p-4 text-center">
+          <input id="fileSelfie" type="file" accept="image/*" capture="user" class="hidden" />
+          <div class="prompt py-10">
+            <p class="text-5xl">📷</p>
+            <p class="text-white text-sm font-medium mt-3">Tap to take or upload a photo</p>
+            <p class="text-gray-500 text-xs mt-1">Face the camera in good light</p>
+          </div>
+          <img class="preview hidden w-44 h-44 object-cover rounded-full mx-auto" alt="Your photo preview" />
+        </label>
+        <p id="errSelfie" class="err text-red-400 text-sm mt-2 hidden">Add your photo to continue.</p>
+      </div>
+
+      <!-- STEP 2: Government ID -->
+      <div id="step2" class="step hidden">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl"
+               style="background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(37,99,235,0.10));">🪪</div>
+          <div class="flex-1">
+            <h2 class="text-xl font-semibold text-white">Upload government ID</h2>
+            <p class="text-gray-400 text-sm mt-1">Aadhaar, Voter ID, Licence or PAN</p>
+          </div>
+        </div>
+
+        <label id="boxId" class="upload block rounded-xl p-4 text-center">
+          <input id="fileId" type="file" accept="image/*" class="hidden" />
+          <div class="prompt py-10">
+            <p class="text-5xl">📄</p>
+            <p class="text-white text-sm font-medium mt-3">Tap to upload your ID</p>
+            <p class="text-gray-500 text-xs mt-1">All 4 corners and the text must be clear</p>
+          </div>
+          <img class="preview hidden w-full max-h-56 object-contain rounded-lg" alt="ID preview" />
+        </label>
+        <p id="errId" class="err text-red-400 text-sm mt-2 hidden">Upload your government ID to continue.</p>
+      </div>
+
+      <!-- STEP 3: Aadhaar number -->
+      <div id="step3" class="step hidden">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl"
+               style="background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(37,99,235,0.10));">🔢</div>
+          <div class="flex-1">
+            <h2 class="text-xl font-semibold text-white">Enter Aadhaar number</h2>
+            <p class="text-gray-400 text-sm mt-1">We will send an OTP to your registered mobile</p>
+          </div>
+        </div>
+
+        <label for="aadhaar" class="block text-gray-300 text-sm font-medium mb-2">Aadhaar number</label>
+        <div class="field bg-zinc-950 border border-zinc-700 rounded-xl">
+          <input id="aadhaar" type="text" inputmode="numeric" maxlength="14" autocomplete="off"
+                 placeholder="XXXX XXXX XXXX"
+                 class="w-full bg-transparent text-white placeholder-gray-600 px-4 py-3.5 outline-none text-lg tracking-widest" />
+        </div>
+        <p id="errAadhaar" class="err text-red-400 text-sm mt-2 hidden">Enter a valid 12-digit Aadhaar number.</p>
+      </div>
+
+      <!-- STEP 4: OTP -->
+      <div id="step4" class="step hidden">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl"
+               style="background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(37,99,235,0.10));">💬</div>
+          <div class="flex-1">
+            <h2 class="text-xl font-semibold text-white">Enter OTP</h2>
+            <p class="text-gray-400 text-sm mt-1">Sent to the mobile linked with <span id="aadhaarMask" class="text-white"></span></p>
+          </div>
+        </div>
+
+        <div id="otpRow" class="flex gap-2 justify-between">
+          <input class="otp-box w-full aspect-square max-w-[52px] text-center text-xl text-white bg-zinc-950 border border-zinc-700 rounded-xl" maxlength="1" inputmode="numeric" />
+          <input class="otp-box w-full aspect-square max-w-[52px] text-center text-xl text-white bg-zinc-950 border border-zinc-700 rounded-xl" maxlength="1" inputmode="numeric" />
+          <input class="otp-box w-full aspect-square max-w-[52px] text-center text-xl text-white bg-zinc-950 border border-zinc-700 rounded-xl" maxlength="1" inputmode="numeric" />
+          <input class="otp-box w-full aspect-square max-w-[52px] text-center text-xl text-white bg-zinc-950 border border-zinc-700 rounded-xl" maxlength="1" inputmode="numeric" />
+          <input class="otp-box w-full aspect-square max-w-[52px] text-center text-xl text-white bg-zinc-950 border border-zinc-700 rounded-xl" maxlength="1" inputmode="numeric" />
+          <input class="otp-box w-full aspect-square max-w-[52px] text-center text-xl text-white bg-zinc-950 border border-zinc-700 rounded-xl" maxlength="1" inputmode="numeric" />
+        </div>
+        <p id="errOtp" class="err text-red-400 text-sm mt-2 hidden">Enter all 6 digits.</p>
+
+        <p class="text-gray-500 text-xs mt-4">Demo mode: any 6-digit OTP will work.</p>
+
+        <div class="flex items-center justify-between mt-4 text-sm">
+          <button onclick="goTo(3)" class="text-gray-400 hover:text-white transition-colors">Change Aadhaar number</button>
+          <button id="resendBtn" onclick="startTimer()" class="text-blue-400 disabled:text-gray-600" disabled>Resend in 30s</button>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex gap-3 mt-7">
+        <button id="backBtn" onclick="prev()" class="hidden px-6 rounded-xl py-3.5 text-gray-300 border border-zinc-700 hover:text-white hover:border-zinc-500 transition-colors">Back</button>
+        <button id="nextBtn" onclick="next()" class="btn-primary flex-1 text-white font-semibold text-base rounded-xl py-3.5">Continue</button>
+      </div>
+    </div>
+
+    <!-- DONE -->
+    <div id="doneCard" class="hidden">
+      <div class="bg-zinc-900/90 border border-zinc-700 rounded-2xl p-6 md:p-8 text-center">
+        <div class="pop w-24 h-24 rounded-full bg-green-500/15 border border-green-500/40 flex items-center justify-center text-5xl mx-auto">✅</div>
+        <h2 class="text-2xl font-semibold text-white mt-5">You are verified</h2>
+        <p class="text-gray-400 text-sm mt-2">Employers can now see your photo and verified badge.</p>
+
+        <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex items-center gap-4 text-left mt-7">
+          <img id="doneSelfie" class="w-16 h-16 rounded-full object-cover bg-zinc-800" alt="Your photo" />
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-white">Your profile</p>
+            <p id="doneAadhaar" class="text-gray-400 text-sm"></p>
+          </div>
+          <span class="text-xs rounded-full px-3 py-1 bg-green-500/15 text-green-400 border border-green-500/30">✔ Verified</span>
+        </div>
+
+        <button onclick="window.location.href='worker-dashboard.html'"
+          class="btn-primary w-full mt-7 text-white font-semibold text-base rounded-xl py-3.5">
+          Go to dashboard
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const labels = ['Your photo', 'Government ID', 'Aadhaar number', 'OTP'];
+    const images = { selfie: null, id: null };
+    const otpBoxes = [...document.querySelectorAll('.otp-box')];
+    let current = 1;
+    let timerId = null;
+
+    // Only workers should see this page
+    try {
+      if (localStorage.getItem('userRole') === 'employer') {
+        window.location.href = 'employer-dashboard.html';
+      }
+    } catch (e) {}
+
+    function shake(el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+    function hideErrs() { document.querySelectorAll('.err').forEach(e => e.classList.add('hidden')); }
+
+    // ----- Photo uploads with preview -----
+    function setupUpload(inputId, boxId, key) {
+      $(inputId).addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) { alert('Please choose a photo.'); return; }
+        if (file.size > 8 * 1024 * 1024) { alert('Photo is too large. Maximum size is 8 MB.'); return; }
+        const reader = new FileReader();
+        reader.onload = () => {
+          images[key] = { dataUrl: reader.result, file };
+          const box = $(boxId);
+          box.classList.add('has-file');
+          box.querySelector('.prompt').classList.add('hidden');
+          const img = box.querySelector('.preview');
+          img.src = reader.result;
+          img.classList.remove('hidden');
+          hideErrs();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    setupUpload('fileSelfie', 'boxSelfie', 'selfie');
+    setupUpload('fileId', 'boxId', 'id');
+
+    // ----- Aadhaar input: digits only, grouped as XXXX XXXX XXXX -----
+    $('aadhaar').addEventListener('input', () => {
+      const digits = $('aadhaar').value.replace(/\D/g, '').slice(0, 12);
+      $('aadhaar').value = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+      hideErrs();
+    });
+    $('aadhaar').addEventListener('keydown', e => { if (e.key === 'Enter') next(); });
+
+    // ----- OTP boxes -----
+    otpBoxes.forEach((box, i) => {
+      box.addEventListener('input', () => {
+        box.value = box.value.replace(/\D/g, '');
+        hideErrs();
+        if (box.value && i < otpBoxes.length - 1) otpBoxes[i + 1].focus();
+      });
+      box.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !box.value && i > 0) otpBoxes[i - 1].focus();
+        if (e.key === 'Enter') next();
+      });
+      box.addEventListener('paste', e => {
+        const text = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+        if (!text) return;
+        e.preventDefault();
+        text.split('').forEach((ch, k) => { otpBoxes[k].value = ch; });
+        otpBoxes[Math.min(text.length, 5)].focus();
+      });
+    });
+
+    // ----- Steps -----
+    function goTo(step) {
+      current = step;
+      hideErrs();
+      document.querySelectorAll('.step').forEach(s => s.classList.add('hidden'));
+      $('step' + step).classList.remove('hidden');
+
+      document.querySelectorAll('[data-dot]').forEach(d => {
+        const n = Number(d.dataset.dot);
+        d.classList.toggle('done', n < step);
+        d.classList.toggle('current', n === step);
+        d.textContent = n < step ? '✓' : n;
+      });
+      $('barFill').style.width = (step * 25) + '%';
+      $('stepLabel').textContent = 'Step ' + step + ' of 4: ' + labels[step - 1];
+
+      $('backBtn').classList.toggle('hidden', step === 1);
+      $('nextBtn').textContent = step === 4 ? 'Verify' : (step === 3 ? 'Send OTP' : 'Continue');
+      $('nextBtn').disabled = false;
+
+      if (step === 3) $('aadhaar').focus();
+      if (step === 4) {
+        const digits = $('aadhaar').value.replace(/\D/g, '');
+        $('aadhaarMask').textContent = 'XXXX XXXX ' + digits.slice(-4);
+        otpBoxes.forEach(b => b.value = '');
+        otpBoxes[0].focus();
+        startTimer();
+      } else {
+        clearInterval(timerId);
+      }
+    }
+
+    function prev() { if (current > 1) goTo(current - 1); }
+
+    function next() {
+      hideErrs();
+
+      if (current === 1) {
+        if (!images.selfie) { $('errSelfie').classList.remove('hidden'); shake($('boxSelfie')); return; }
+        goTo(2);
+      }
+      else if (current === 2) {
+        if (!images.id) { $('errId').classList.remove('hidden'); shake($('boxId')); return; }
+        goTo(3);
+      }
+      else if (current === 3) {
+        const digits = $('aadhaar').value.replace(/\D/g, '');
+        if (digits.length !== 12) {
+          $('errAadhaar').classList.remove('hidden');
+          shake($('aadhaar').parentElement);
+          return;
+        }
+        // TODO: call your Aadhaar OTP service here to send the OTP
+        goTo(4);
+      }
+      else if (current === 4) {
+        const code = otpBoxes.map(b => b.value).join('');
+        if (code.length < 6) {
+          $('errOtp').classList.remove('hidden');
+          shake($('otpRow'));
+          return;
+        }
+        // DEMO: any 6-digit OTP is accepted.
+        // TODO: verify the OTP with your Aadhaar service here
+        finish();
+      }
+    }
+
+    // ----- Done -----
+    function finish() {
+      const btn = $('nextBtn');
+      btn.disabled = true;
+      btn.textContent = 'Verifying...';
+      clearInterval(timerId);
+
+      const digits = $('aadhaar').value.replace(/\D/g, '');
+      const masked = 'Aadhaar ending ' + digits.slice(-4);
+
+      // Only the status and the masked number are kept in the browser.
+      // The photos and the full Aadhaar number are NOT saved here.
+      try {
+        localStorage.setItem('verifyStatus', 'verified');
+        localStorage.setItem('idMasked', masked);
+      } catch (e) {}
+
+      // TODO: upload images.selfie.file and images.id.file to your backend here
+
+      setTimeout(() => {
+        $('doneSelfie').src = images.selfie.dataUrl;
+        $('doneAadhaar').textContent = masked;
+        $('progress').classList.add('hidden');
+        $('mainCard').classList.add('hidden');
+        $('doneCard').classList.remove('hidden');
+      }, 900);
+    }
+
+    // ----- Resend timer -----
+    function startTimer() {
+      let left = 30;
+      const btn = $('resendBtn');
+      btn.disabled = true;
+      btn.textContent = 'Resend in ' + left + 's';
+      clearInterval(timerId);
+      timerId = setInterval(() => {
+        left--;
+        if (left <= 0) {
+          clearInterval(timerId);
+          btn.disabled = false;
+          btn.textContent = 'Resend OTP';
+        } else {
+          btn.textContent = 'Resend in ' + left + 's';
+        }
+      }, 1000);
+    }
+
+    goTo(1);
+  </script>
+
+</body>
+</html>
