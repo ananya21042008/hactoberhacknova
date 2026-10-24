@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorkKaro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: radial-gradient(ellipse at top, #111111 0%, #000000 70%);
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    /* Entrance animation */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeUp 0.7s ease forwards;
+    }
+    .fade-up:nth-child(1) { animation-delay: 0.1s; }
+    .fade-up:nth-child(2) { animation-delay: 0.25s; }
+    .fade-up:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Card interactions */
+    .role-card {
+      transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .role-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+    .role-card:active {
+      transform: translateY(-2px) scale(0.98);
+    }
+
+    /* Glow effect on hover */
+    .employer-card:hover {
+      border-color: #f97316;
+      box-shadow: 0 0 0 1px #f97316, 0 25px 50px -12px rgba(249, 115, 22, 0.25);
+    }
+    .worker-card:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px #3b82f6, 0 25px 50px -12px rgba(59, 130, 246, 0.25);
+    }
+
+    /* Arrow slide */
+    .arrow {
+      transition: all 0.3s ease;
+      transform: translateX(-8px);
+      opacity: 0;
+    }
+    .role-card:hover .arrow {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    /* Icon bounce */
+    .icon-box {
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .role-card:hover .icon-box {
+      transform: scale(1.15) rotate(3deg);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center px-4 py-12">
+
+  <!-- Logo -->
+  <div class="fade-up mb-16 text-center">
+    <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight select-none">
+      <span class="text-white">Work</span><span class="text-orange-500">Karo</span>
+    </h1>
+    <p class="text-gray-400 mt-3 text-lg tracking-wide">Find work. Hire fast.</p>
+  </div>
+
+  <!-- Role Cards -->
+  <div class="w-full max-w-md space-y-5">
+
+    <!-- Employer -->
+    <button onclick="selectRole('employer')" 
+      class="role-card employer-card fade-up w-full bg-zinc-900/90 border border-zinc-700 rounded-2xl p-6 md:p-7 text-left group">
+      <div class="flex items-center gap-5">
+        <div class="icon-box w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500/25 to-orange-600/10 flex items-center justify-center text-4xl">
+          🏪
+        </div>
+        <div class="flex-1">
+          <h2 class="text-xl font-semibold text-white group-hover:text-orange-400 transition-colors">
+            I am an Employer
+          </h2>
+          <p class="text-gray-400 text-sm mt-1">I need trusted workers nearby</p>
+        </div>
+        <div class="arrow text-orange-500 text-2xl font-light">→</div>
+      </div>
+    </button>
+
+    <!-- Worker -->
+    <button onclick="selectRole('worker')" 
+      class="role-card worker-card fade-up w-full bg-zinc-900/90 border border-zinc-700 rounded-2xl p-6 md:p-7 text-left group">
+      <div class="flex items-center gap-5">
+        <div class="icon-box w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/25 to-blue-600/10 flex items-center justify-center text-4xl">
+          👷
+        </div>
+        <div class="flex-1">
+          <h2 class="text-xl font-semibold text-white group-hover:text-blue-400 transition-colors">
+            I am a Worker
+          </h2>
+          <p class="text-gray-400 text-sm mt-1">I am looking for daily work</p>
+        </div>
+        <div class="arrow text-blue-500 text-2xl font-light">→</div>
+      </div>
+    </button>
+
+  </div>
+
+  <!-- Helper text -->
+  <p class="fade-up text-gray-600 text-sm mt-12 tracking-wide">Choose your role to continue</p>
+
+  <script>
+    function selectRole(role) {
+      // Add a small click feedback
+      const cards = document.querySelectorAll('.role-card');
+      cards.forEach(card => card.style.pointerEvents = 'none');
+
+      localStorage.setItem('userRole', role);
+
+      // Smooth transition feel
+      document.body.style.opacity = '0.7';
+      document.body.style.transition = 'opacity 0.3s ease';
+
+      setTimeout(() => {
+        window.location.href = "login.html";
+      }, 280);
+    }
+  </script>
+
+</body>
+</html>

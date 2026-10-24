@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorkKaro - Login / Sign up</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: radial-gradient(ellipse at top, #111111 0%, #000000 70%);
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    /* Entrance animation */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeUp 0.7s ease forwards;
+    }
+    .d1 { animation-delay: 0.1s; }
+    .d2 { animation-delay: 0.25s; }
+    .d3 { animation-delay: 0.4s; }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    :root { --accent: #f97316; --accent-glow: rgba(249, 115, 22, 0.25); }
+
+    .auth-card {
+      transition: box-shadow 0.35s ease, border-color 0.35s ease;
+    }
+    .auth-card:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), 0 25px 50px -12px var(--accent-glow);
+    }
+
+    /* Login / Sign up toggle */
+    .tab-btn {
+      transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      color: #9ca3af;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 8px 20px -8px var(--accent-glow);
+    }
+    .tab-btn:not(.active):hover { color: #fff; }
+
+    .field {
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .field:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 18px 35px -10px var(--accent-glow);
+    }
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0) scale(0.98);
+    }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .accent-text { color: var(--accent); }
+
+    .shake { animation: shake 0.4s ease; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    .otp-box {
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .otp-box:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    input[type="checkbox"] { accent-color: #f97316; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fade-up { animation: none; opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center px-4 py-12">
+
+  <!-- Logo -->
+  <div class="fade-up d1 mb-10 text-center">
+    <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight select-none">
+      <span class="text-white">Work</span><span class="text-orange-500">Karo</span>
+    </h1>
+    <p class="text-gray-400 mt-3 text-lg tracking-wide">Find work. Hire fast.</p>
+  </div>
+
+  <!-- Auth Card -->
+  <div class="w-full max-w-md">
+    <div class="auth-card fade-up d2 bg-zinc-900/90 border border-zinc-700 rounded-2xl p-6 md:p-8">
+
+      <!-- Login / Sign up toggle -->
+      <div class="flex bg-zinc-950 border border-zinc-800 rounded-xl p-1 mb-7">
+        <button id="tabLogin" onclick="setMode('login')" class="tab-btn active flex-1 py-2.5 rounded-lg text-sm font-semibold">Login</button>
+        <button id="tabSignup" onclick="setMode('signup')" class="tab-btn flex-1 py-2.5 rounded-lg text-sm font-semibold">Sign up</button>
+      </div>
+
+      <!-- Header -->
+      <div class="flex items-center gap-5 mb-7">
+        <div id="headIcon" class="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl"
+             style="background: linear-gradient(135deg, rgba(249,115,22,0.25), rgba(234,88,12,0.10));">📱</div>
+        <div class="flex-1">
+          <h2 id="headTitle" class="text-xl font-semibold text-white">Welcome back</h2>
+          <p id="headSub" class="text-gray-400 text-sm mt-1">Login with your mobile number</p>
+        </div>
+      </div>
+
+      <!-- Step 1: Details -->
+      <div id="stepPhone">
+
+        <!-- Name (sign up only) -->
+        <div id="nameWrap" class="hidden mb-5">
+          <label for="fullName" class="block text-gray-300 text-sm font-medium mb-2">Full name</label>
+          <div class="field bg-zinc-950 border border-zinc-700 rounded-xl overflow-hidden">
+            <input id="fullName" type="text" autocomplete="name" maxlength="50"
+                   placeholder="Enter your full name"
+                   class="w-full bg-transparent text-white placeholder-gray-600 px-4 py-3.5 outline-none text-base" />
+          </div>
+          <p id="nameError" class="text-red-400 text-sm mt-2 hidden">Enter your name.</p>
+        </div>
+
+        <!-- Mobile -->
+        <label for="phone" class="block text-gray-300 text-sm font-medium mb-2">Mobile number</label>
+        <div class="field flex items-center bg-zinc-950 border border-zinc-700 rounded-xl overflow-hidden">
+          <span class="px-4 text-gray-400 text-base border-r border-zinc-700 py-3.5 select-none">+91</span>
+          <input id="phone" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel-national"
+                 placeholder="Enter 10-digit number"
+                 class="flex-1 bg-transparent text-white placeholder-gray-600 px-4 py-3.5 outline-none text-base" />
+        </div>
+        <p id="phoneError" class="text-red-400 text-sm mt-2 hidden">Enter a valid 10-digit mobile number.</p>
+
+        <!-- Terms (sign up only) -->
+        <div id="termsWrap" class="hidden mt-5">
+          <label class="flex items-start gap-3 text-sm text-gray-400 cursor-pointer">
+            <input id="terms" type="checkbox" class="mt-1 w-4 h-4" />
+            <span>I agree to the <a href="#" class="accent-text hover:underline">Terms</a> and <a href="#" class="accent-text hover:underline">Privacy Policy</a></span>
+          </label>
+          <p id="termsError" class="text-red-400 text-sm mt-2 hidden">Accept the terms to continue.</p>
+        </div>
+
+        <button id="sendOtpBtn" onclick="sendOtp()"
+          class="btn-primary w-full mt-6 text-white font-semibold text-base rounded-xl py-3.5">
+          Send OTP
+        </button>
+
+        <p class="text-center text-gray-500 text-sm mt-5">
+          <span id="switchText">New to WorkKaro?</span>
+          <button id="switchBtn" onclick="toggleMode()" class="accent-text font-medium hover:underline ml-1">Create an account</button>
+        </p>
+      </div>
+
+      <!-- Step 2: OTP -->
+      <div id="stepOtp" class="hidden">
+        <p class="text-gray-300 text-sm">
+          Enter the 4-digit code sent to <span id="sentTo" class="text-white font-medium"></span>
+        </p>
+
+        <div id="otpRow" class="flex gap-3 mt-4 justify-between">
+          <input class="otp-box w-full aspect-square max-w-[64px] text-center text-2xl text-white bg-zinc-950 border border-zinc-700 rounded-xl" maxlength="1" inputmode="numeric" />
+          <input class="otp-box w-full aspect-square max-w-[64px] text-center text-2xl text-white bg-zinc-950 border border-zinc-700 rounded-xl" maxlength="1" inputmode="numeric" />
+          <input class="otp-box w-full aspect-square max-w-[64px] text-center text-2xl text-white bg-zinc-950 border border-zinc-700 rounded-xl" maxlength="1" inputmode="numeric" />
+          <input class="otp-box w-full aspect-square max-w-[64px] text-center text-2xl text-white bg-zinc-950 border border-zinc-700 rounded-xl" maxlength="1" inputmode="numeric" />
+        </div>
+        <p id="otpError" class="text-red-400 text-sm mt-2 hidden">Enter all 4 digits.</p>
+
+        <button id="verifyBtn" onclick="verifyOtp()"
+          class="btn-primary w-full mt-6 text-white font-semibold text-base rounded-xl py-3.5">
+          Verify and login
+        </button>
+
+        <div class="flex items-center justify-between mt-5 text-sm">
+          <button onclick="changeNumber()" class="text-gray-400 hover:text-white transition-colors">Change number</button>
+          <button id="resendBtn" onclick="startTimer()" class="accent-text disabled:text-gray-600" disabled>Resend in 30s</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Back -->
+    <div class="fade-up d3 text-center mt-8">
+      <a href="index.html" class="text-gray-500 hover:text-gray-300 text-sm tracking-wide transition-colors">← Choose a different role</a>
+    </div>
+  </div>
+
+  <script>
+    // ----- Where to go after login / sign up -----
+    let role = null;
+    try { role = localStorage.getItem('userRole'); } catch (e) {}
+    const nextPage = role === 'worker' ? 'worker-dashboard.html' : 'employer-dashboard.html';
+
+    // ----- Elements -----
+    const $ = id => document.getElementById(id);
+    const phoneInput = $('phone');
+    const nameInput = $('fullName');
+    const termsInput = $('terms');
+    const otpBoxes = [...document.querySelectorAll('.otp-box')];
+    const resendBtn = $('resendBtn');
+    let mode = 'login';
+    let timerId = null;
+
+    // ----- Login / Sign up switching -----
+    function setMode(m) {
+      mode = m;
+      const isSignup = m === 'signup';
+
+      $('tabLogin').classList.toggle('active', !isSignup);
+      $('tabSignup').classList.toggle('active', isSignup);
+
+      $('nameWrap').classList.toggle('hidden', !isSignup);
+      $('termsWrap').classList.toggle('hidden', !isSignup);
+
+      $('headTitle').textContent = isSignup ? 'Create your account' : 'Welcome back';
+      $('headSub').textContent = isSignup ? 'Sign up with your mobile number' : 'Login with your mobile number';
+      $('headIcon').textContent = isSignup ? '✨' : '📱';
+
+      $('switchText').textContent = isSignup ? 'Already have an account?' : 'New to WorkKaro?';
+      $('switchBtn').textContent = isSignup ? 'Login' : 'Create an account';
+
+      $('verifyBtn').textContent = isSignup ? 'Verify and sign up' : 'Verify and login';
+
+      // Back to step 1 and clear errors
+      clearInterval(timerId);
+      $('stepOtp').classList.add('hidden');
+      $('stepPhone').classList.remove('hidden');
+      ['nameError', 'phoneError', 'termsError', 'otpError'].forEach(id => $(id).classList.add('hidden'));
+    }
+    function toggleMode() { setMode(mode === 'login' ? 'signup' : 'login'); }
+
+    // ----- Input cleaning -----
+    phoneInput.addEventListener('input', () => {
+      phoneInput.value = phoneInput.value.replace(/\D/g, '');
+      $('phoneError').classList.add('hidden');
+    });
+    nameInput.addEventListener('input', () => $('nameError').classList.add('hidden'));
+    termsInput.addEventListener('change', () => $('termsError').classList.add('hidden'));
+    [phoneInput, nameInput].forEach(el =>
+      el.addEventListener('keydown', e => { if (e.key === 'Enter') sendOtp(); })
+    );
+
+    function shake(el) {
+      el.classList.remove('shake');
+      void el.offsetWidth;
+      el.classList.add('shake');
+    }
+
+    // ----- Step 1: send OTP -----
+    function sendOtp() {
+      let ok = true;
+
+      if (mode === 'signup') {
+        if (nameInput.value.trim().length < 2) {
+          $('nameError').classList.remove('hidden');
+          shake(nameInput.parentElement);
+          ok = false;
+        }
+      }
+
+      if (!/^[6-9]\d{9}$/.test(phoneInput.value)) {
+        $('phoneError').classList.remove('hidden');
+        shake(phoneInput.parentElement);
+        ok = false;
+      }
+
+      if (mode === 'signup' && !termsInput.checked) {
+        $('termsError').classList.remove('hidden');
+        ok = false;
+      }
+
+      if (!ok) return;
+
+      // TODO: call your backend here to send the OTP
+      // login  -> check that the number is registered
+      // signup -> check that the number is not already registered
+      $('sentTo').textContent = '+91 ' + phoneInput.value;
+      $('stepPhone').classList.add('hidden');
+      $('stepOtp').classList.remove('hidden');
+      otpBoxes.forEach(b => b.value = '');
+      otpBoxes[0].focus();
+      startTimer();
+    }
+
+    // ----- OTP box behaviour -----
+    otpBoxes.forEach((box, i) => {
+      box.addEventListener('input', () => {
+        box.value = box.value.replace(/\D/g, '');
+        $('otpError').classList.add('hidden');
+        if (box.value && i < otpBoxes.length - 1) otpBoxes[i + 1].focus();
+      });
+      box.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !box.value && i > 0) otpBoxes[i - 1].focus();
+        if (e.key === 'Enter') verifyOtp();
+      });
+      box.addEventListener('paste', e => {
+        const text = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 4);
+        if (!text) return;
+        e.preventDefault();
+        text.split('').forEach((ch, k) => { otpBoxes[k].value = ch; });
+        otpBoxes[Math.min(text.length, 3)].focus();
+      });
+    });
+
+    // ----- Step 2: verify -----
+    function verifyOtp() {
+      const code = otpBoxes.map(b => b.value).join('');
+      if (code.length < 4) {
+        $('otpError').classList.remove('hidden');
+        shake($('otpRow'));
+        return;
+      }
+
+      // TODO: verify the OTP with your backend here
+      // signup -> also send the name and role to create the account
+      try {
+        localStorage.setItem('userPhone', phoneInput.value);
+        localStorage.setItem('isLoggedIn', 'true');
+        if (mode === 'signup') localStorage.setItem('userName', nameInput.value.trim());
+      } catch (e) {}
+
+      const btn = $('verifyBtn');
+      btn.disabled = true;
+      btn.textContent = mode === 'signup' ? 'Creating account...' : 'Logging in...';
+      document.body.style.transition = 'opacity 0.3s ease';
+      document.body.style.opacity = '0.7';
+      setTimeout(() => { window.location.href = nextPage; }, 400);
+    }
+
+    function changeNumber() {
+      clearInterval(timerId);
+      $('stepOtp').classList.add('hidden');
+      $('stepPhone').classList.remove('hidden');
+      phoneInput.focus();
+    }
+
+    // ----- Resend timer -----
+    function startTimer() {
+      let left = 30;
+      resendBtn.disabled = true;
+      resendBtn.textContent = 'Resend in ' + left + 's';
+      clearInterval(timerId);
+      timerId = setInterval(() => {
+        left--;
+        if (left <= 0) {
+          clearInterval(timerId);
+          resendBtn.disabled = false;
+          resendBtn.textContent = 'Resend OTP';
+        } else {
+          resendBtn.textContent = 'Resend in ' + left + 's';
+        }
+      }, 1000);
+    }
+  </script>
+
+</body>
+</html>
